@@ -46,7 +46,7 @@ def get_val(key: str, default=None):
         val = val.get(k, default)
         if default is not None and val == default:
             break
-    assert val is not None
+    assert val is not None, f"{key} has missing value"
     return _to_str(val, config_dir_)
 
 

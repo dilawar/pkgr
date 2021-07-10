@@ -7,6 +7,7 @@ import pkgr.config
 import pkgr.templates
 import pkgr.config
 import pkgr.data
+import pkgr.docker
 
 from pathlib import Path
 from loguru import logger
@@ -41,7 +42,6 @@ def _generate_spec_str(config: T.Dict[str, T.Any]) -> str:
 
 @app.command()
 def generate(
-    toml: Path,
     distribution: str,
     specfile: T.Optional[Path] = None,
     dockerfile: T.Optional[Path] = None,
@@ -72,14 +72,7 @@ def generate(
     if dockerfile is None:
         dockerfile = datadir / "Dockerfile"
 
-    with dockerfile.open("w") as f:
-        DOCKER = pkgr.templates.DOCKER
-        DOCKER.format(
-            image=pkgr.data.get_image(distribution, release),
-            maintainer=pkgr.config.get_val("maintainer"),
-        )
-        f.write(DOCKER)
-    logger.info(f"Wrote docker file to {dockerfile}")
+    pkgr.docker.write_docker(dockerfile, config, distribution, release)
 
 
 if __name__ == "__main__":

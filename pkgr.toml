@@ -1,6 +1,8 @@
 name = 'pkgr'
 version = '0.1.0'
 summary = "Package Linux pacakges"
+author = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
+maintainer = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
 description = './README.md'
 license = 'GNUv3'
 url = "https://github.com/dilawar/pkgr"
