@@ -35,7 +35,7 @@ def get(config: T.Dict[str, T.Any], key: str, default=None):
         if default is not None and val == default:
             break
     assert val is not None
-    return _to_str(val, config["basepath"])
+    return _to_str(val, config_dir_)
 
 
 def load(tomlfile: Path):
@@ -46,7 +46,7 @@ def load(tomlfile: Path):
     return config_
 
 
-def get() -> T.Dict[str, T.Any]:
+def config() -> T.Dict[str, T.Any]:
     assert config_, "Did you call pkgr.config.load?"
     return config_
 

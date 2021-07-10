@@ -5,12 +5,13 @@ import typing as T
 
 import pkgr.config
 import pkgr.templates
+import pkgr.config
 
 from pathlib import Path
+from loguru import logger
 
 import typer
 
-import pkgr.config
 
 app = typer.Typer()
 
@@ -23,7 +24,7 @@ def _gen_requires(reqs: T.List[str]) -> str:
     return "\n".join([f"Requires: {x}" for x in reqs])
 
 
-def generate_spec_str(config: T.Dict[str, T.Any]) -> str:
+def _generate_spec_str(config: T.Dict[str, T.Any]) -> str:
     RPM_TEMPLATE = pkgr.templates.RPM
     config["build_requires"] = _gen_build_requires(config["builddeps"].get("rpm", []))
     config["requires"] = _gen_requires(config.get("deps", dict(rpm=[])).get("rpm", []))
@@ -37,45 +38,18 @@ def generate_spec_str(config: T.Dict[str, T.Any]) -> str:
     return RPM_TEMPLATE.format(**config)
 
 
-def build(config: T.Dict[str, T.Any]):
-    specstr = generate_spec_str(config)
-    print(specstr)
-
-
-def _load_toml(tomlfile: Path):
-    assert tomlfile.exists(), f"{tomlfile} does not exists"
-    cfg = toml.load(tomlfile)
-    cfg["basepath"] = tomlfile.resolve().parent
-    return cfg
-
-
-def gen_dockerfile(toml: Path, distribution: str):
-    """Generate a Dockerfile for given distribution"""
-    config = _load_toml(toml)
-    basedir = toml.parent
-
-    specstr = pkgr.rpm.generate_spec_str(config)
-    logger.debug(f"{specstr}")
-    if specfile is None:
-        specfile = Path(f'{config["name"]}.spec')
-        logger.info(f"Using default specfile: {specfile}")
-
-    with specfile.open("w") as f:
-        f.write(specstr)
-    logger.info(f"Wrote {specfile}")
-
-
 @app.command()
 def generate(
     toml: Path,
     distribution: str,
     specfile: T.Optional[Path] = None,
     dockerfile: T.Optional[Path] = None,
+    release: str = "latest",
 ):
     """Generate build files and Dockerfile"""
 
     pkgr.config.load(toml)
-    config = pkgr.config.get()
+    config = pkgr.config.config()
     assert config
 
     assert distribution
@@ -83,7 +57,8 @@ def generate(
     datadir.mkdir(exist_ok=True)
     logger.info(f"Creating {datadir} for creating distribution.")
 
-    specstr = pkgr.rpm.generate_spec_str(config)
+    specstr = _generate_spec_str(config)
+
     if specfile is None:
         specfile = datadir / Path(f'{config["name"]}.spec')
         logger.info(f"Using default specfile: {specfile}")
@@ -93,13 +68,16 @@ def generate(
     logger.info(f"Wrote {specfile}")
 
     if dockerfile is None:
-        dockerfile = datadir / 'Dockerfile'
+        dockerfile = datadir / "Dockerfile"
 
-    with dockerfile.open('w') as f:
+    with dockerfile.open("w") as f:
         DOCKER = pkgr.templates.DOCKER
+        DOCKER.format(
+            image=pkgr.data.get_image(distribution, release),
+            maintainer=pkgr.config.get("maintainer"),
+        )
         f.write(DOCKER)
-    logger.info(f'Wrote docker file to {dockerfile}')
-
+    logger.info(f"Wrote docker file to {dockerfile}")
 
 
 if __name__ == "__main__":
