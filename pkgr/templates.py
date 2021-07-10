@@ -37,4 +37,10 @@ Source0:  {source}
 DOCKER = """
 FROM: {image}
 MAINTAINER: {author}
+
+WORKDIR /work
+
+{run}
+
+{build}
 """
