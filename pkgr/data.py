@@ -22,6 +22,16 @@ IMAGES = dict(
     },
 )
 
+# prepare section for docker image.
+PREPARE = json.loads(
+    """{
+        "debian.*|ubuntu.*" : "RUN apt update",
+        "opensuse.*" : "RUN zypper ref",
+        "centos7.*" : "RUN yum install -y epel-release",
+        "centos.*|fedora.*" : "RUN dnf install -y epel-release"
+        }"""
+)
+
 
 # regex -> install commands.
 INSTALL_CMDS = json.loads(
@@ -33,10 +43,11 @@ INSTALL_CMDS = json.loads(
         }"""
 )
 
+# default apps.
 DEFAULT_APPS = json.loads(
     """{
         "debian.*|ubuntu.*" : "dpkg-dev dpkg build-depends pbuilder",
-        "opensuse.*|centos.*|fedora.*" : "rpmlint rpm"
+        "opensuse.*|centos.*|fedora.*" : "rpmlint rpm rpm-devel rpmdevtools"
         }"""
 )
 
@@ -54,6 +65,11 @@ def get_install_cmd(dist, release) -> str:
     return _get_best_match(INSTALL_CMDS, key)
 
 
+def get_prepare(dist, release) -> str:
+    key = f"{dist}{release}"
+    return _get_best_match(PREPARE, key)
+
+
 def get_image(distribution: str, release: str = "latest") -> str:
     global IMAGES
     dist = distribution.lower()
@@ -68,6 +84,11 @@ def find_tags(dist: str):
     url = DOCKER_IO_URL.format(dist=dist)
     tags = json.loads(urllib.request.urlopen(url).read())
     return [x["name"] for x in tags["results"]]
+
+
+def get_default_installs(dist: str, release: str) -> str:
+    key = f"{dist}{release}"
+    return _get_best_match(DEFAULT_APPS, key)
 
 
 def test_install_cmds():

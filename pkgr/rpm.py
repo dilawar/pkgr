@@ -40,6 +40,10 @@ def _generate_spec_str(config: T.Dict[str, T.Any]) -> str:
     return RPM_TEMPLATE.format(**config)
 
 
+def default_dockerfile(distribution, release) -> Path:
+    return pkgr.config.config_dir() / distribution / "Dockerfile"
+
+
 @app.command()
 def generate(
     distribution: str,
@@ -55,24 +59,35 @@ def generate(
     assert config
 
     assert distribution
-    datadir = pkgr.config.config_dir() / Path(distribution)
-    datadir.mkdir(exist_ok=True)
-    logger.info(f"Creating {datadir} for creating distribution.")
-
     specstr = _generate_spec_str(config)
 
     if specfile is None:
-        specfile = datadir / Path(f'{config["name"]}.spec')
+        specfile = pkgr.config.config_dir() / f'{config["name"]}.spec'
         logger.info(f"Using default specfile: {specfile}")
 
     with specfile.open("w") as f:
         f.write(specstr)
     logger.info(f"Wrote {specfile}")
 
-    if dockerfile is None:
-        dockerfile = datadir / "Dockerfile"
-
+    dockerfile = (
+        default_dockerfile(distribution, release) if dockerfile is None else dockerfile
+    )
     pkgr.docker.write_docker(dockerfile, config, distribution, release)
+
+
+@app.command()
+def build(
+    distribution: str,
+    dockerfile: T.Optional[Path] = None,
+    release: str = "latest",
+    toml: Path = Path("pkgr.toml"),
+):
+    pkgr.config.load(toml)
+    dockerfile = (
+        default_dockerfile(distribution, release) if dockerfile is None else dockerfile
+    )
+    assert dockerfile.exists(), f"{dockerfile} not found. Did you run the generate step"
+    pkgr.docker.build(dockerfile)
 
 
 if __name__ == "__main__":

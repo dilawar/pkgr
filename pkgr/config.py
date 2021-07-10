@@ -37,6 +37,7 @@ def get(config: T.Dict[str, T.Any], key: str, default=None):
     assert val is not None
     return _to_str(val, config_dir_)
 
+
 def get_val(key: str, default=None):
     global config_
     val = config_.copy()
@@ -48,7 +49,6 @@ def get_val(key: str, default=None):
             break
     assert val is not None, f"{key} has missing value"
     return _to_str(val, config_dir_)
-
 
 
 def load(tomlfile: Path):

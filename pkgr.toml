@@ -18,8 +18,8 @@ python3 -m pip install setuptools
 bash='cd build && make install DESTDIR="${BP_DESTDIR}"'
 
 [builddeps]
-deb = ["python3-dev"]
-rpm = ["python39-devel"]
+ubuntu = ["python3-dev"]
+centos = ["python39-devel"]
 
 # files to install
 [files]

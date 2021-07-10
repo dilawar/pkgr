@@ -35,12 +35,14 @@ Source0:  {source}
 """
 
 DOCKER = """
-FROM: {image}
-MAINTAINER: {author}
+FROM {image}
+MAINTAINER {author}
 
+ADD . /work
 WORKDIR /work
 
+{prepare}
+{install}
 {run}
-
-{build}
+{cmd}
 """
