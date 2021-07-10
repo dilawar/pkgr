@@ -1,0 +1,26 @@
+name = 'pkgr'
+version = '0.1.0'
+summary = "Package Linux pacakges"
+description = './README.md'
+license = 'GNUv3'
+url = "https://github.com/dilawar/pkgr"
+source = "."
+
+[compile]
+bash = '''
+export PATH=$HOME/.local/bin:$PATH
+python3 -m pip install setuptools
+'''
+
+[install]
+bash='cd build && make install DESTDIR="${BP_DESTDIR}"'
+
+[builddeps]
+deb = ["python3-dev"]
+rpm = ["python39-devel"]
+
+# files to install
+[files]
+
+[changelog]
+file='CHANGELOG.md'

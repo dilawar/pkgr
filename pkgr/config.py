@@ -37,6 +37,19 @@ def get(config: T.Dict[str, T.Any], key: str, default=None):
     assert val is not None
     return _to_str(val, config_dir_)
 
+def get_val(key: str, default=None):
+    global config_
+    val = config_.copy()
+    keys = key.split(".")
+    while keys:
+        k = keys.pop(0)
+        val = val.get(k, default)
+        if default is not None and val == default:
+            break
+    assert val is not None
+    return _to_str(val, config_dir_)
+
+
 
 def load(tomlfile: Path):
     global config_

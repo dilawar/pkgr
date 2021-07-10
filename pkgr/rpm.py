@@ -6,6 +6,7 @@ import typing as T
 import pkgr.config
 import pkgr.templates
 import pkgr.config
+import pkgr.data
 
 from pathlib import Path
 from loguru import logger
@@ -45,6 +46,7 @@ def generate(
     specfile: T.Optional[Path] = None,
     dockerfile: T.Optional[Path] = None,
     release: str = "latest",
+    toml: Path = Path("pkgr.toml"),
 ):
     """Generate build files and Dockerfile"""
 
@@ -74,7 +76,7 @@ def generate(
         DOCKER = pkgr.templates.DOCKER
         DOCKER.format(
             image=pkgr.data.get_image(distribution, release),
-            maintainer=pkgr.config.get("maintainer"),
+            maintainer=pkgr.config.get_val("maintainer"),
         )
         f.write(DOCKER)
     logger.info(f"Wrote docker file to {dockerfile}")
