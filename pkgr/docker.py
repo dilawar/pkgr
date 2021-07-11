@@ -12,14 +12,14 @@ from pathlib import Path
 from loguru import logger
 
 
-def _get_run_commands(config, distribution, release) -> str:
+def _get_run_commands(distribution: str, release: str) -> str:
     INSTALL_CMD: str = pkgr.data.get_install_cmd(distribution, release)
     TO_INSTALL: str = pkgr.data.get_default_installs(distribution, release)
     runs = [f"{INSTALL_CMD} {TO_INSTALL}"]
     return "\n".join([f"RUN {x}" for x in runs])
 
 
-def add_build_depdencies(config, distribution, release):
+def add_build_depdencies(distribution: str, release: str):
     builddeps = pkgr.config.get_val(f"builddeps.{distribution}")
     install_cmd = pkgr.data.get_install_cmd(distribution, release)
     assert install_cmd
@@ -30,7 +30,7 @@ def add_build_command(specname: str) -> str:
     return f'CMD ["rpmbuild", "-ba", "{specname}"]'
 
 
-def run_docker(label):
+def run_docker(label: str):
     cmd = ["docker", "run", "-t", label]
     logger.info(f"Running: {' '.join(cmd)}")
     popen = subprocess.Popen(
@@ -40,21 +40,23 @@ def run_docker(label):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
-    for line in popen.stdout:
+
+    _stdout = popen.stdout if popen.stdout is not None else []
+    for line in _stdout:
         sys.stdout.write(f" {line}")
         sys.stdout.flush()
     popen.wait(500)
 
 
-def write_docker(dockerfile, config, distribution: str, release: str):
+def write_docker(dockerfile, distribution: str, release: str):
     author = pkgr.config.get_val("author")
     maintainer = pkgr.config.get_val("maintainer", author)
     image = pkgr.data.get_image(distribution, release)
 
     prepare = pkgr.data.get_prepare(distribution, release)
-    run = _get_run_commands(config, distribution, release)
-    install = add_build_depdencies(config, distribution, release)
-    cmd = add_build_command(f"{config['name']}.spec")
+    run = _get_run_commands(distribution, release)
+    install = add_build_depdencies(distribution, release)
+    cmd = add_build_command(f"{pkgr.config.get_val('name')}.spec")
 
     with dockerfile.open("w") as f:
         DOCKER = pkgr.templates.DOCKER

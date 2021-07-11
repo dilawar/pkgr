@@ -8,8 +8,6 @@ import urllib.request
 import json
 import re
 
-DOCKER_IO_URL = "https://registry.hub.docker.com/v2/repositories/library/{dist}/tags"
-
 
 IMAGES = dict(
     opensuse={"latest": "opensuse/tumbleweed", "15.3": "opensuse/leap:15.3"},
@@ -60,35 +58,36 @@ def _get_best_match(data: T.Dict[str, T.Any], key: str) -> T.Any:
     return data[_k[0]]
 
 
-def get_install_cmd(dist, release) -> str:
+def get_install_cmd(dist: str, release: str) -> str:
     key = f"{dist}{release}"
-    return _get_best_match(INSTALL_CMDS, key)
+    return str(_get_best_match(INSTALL_CMDS, key))
 
 
-def get_prepare(dist, release) -> str:
+def get_prepare(dist: str, release: str) -> str:
     key = f"{dist}{release}"
-    return _get_best_match(PREPARE, key)
+    return str(_get_best_match(PREPARE, key))
 
 
 def get_image(distribution: str, release: str = "latest") -> str:
     global IMAGES
     dist = distribution.lower()
     if dist not in IMAGES:
-        loguru.warning(f"{dist} is not supported. Supported OS: {IMAGES.keys()}")
+        logger.warning(f"{dist} is not supported. Supported OS: {IMAGES.keys()}")
         quit(0)
     images = IMAGES[dist]
     return images[release]
 
 
-def find_tags(dist: str):
-    url = DOCKER_IO_URL.format(dist=dist)
-    tags = json.loads(urllib.request.urlopen(url).read())
-    return [x["name"] for x in tags["results"]]
+# def find_tags(dist: str):
+#     DOCKER_IO_URL = "https://registry.hub.docker.com/v2/repositories/library/{dist}/tags"
+#     url = DOCKER_IO_URL.format(dist=dist)
+#     tags = json.loads(urllib.request.urlopen(url).read())
+#     return [x["name"] for x in tags["results"]]
 
 
 def get_default_installs(dist: str, release: str) -> str:
     key = f"{dist}{release}"
-    return _get_best_match(DEFAULT_APPS, key)
+    return str(_get_best_match(DEFAULT_APPS, key))
 
 
 def test_install_cmds():

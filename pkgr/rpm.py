@@ -26,8 +26,9 @@ def _gen_requires(reqs: T.List[str]) -> str:
     return "\n".join([f"Requires: {x}" for x in reqs])
 
 
-def _generate_spec_str(config: T.Dict[str, T.Any]) -> str:
+def generate_spec_str() -> str:
     RPM_TEMPLATE = pkgr.templates.RPM
+    config = pkgr.config.config()
     config["build_requires"] = _gen_build_requires(config["builddeps"].get("rpm", []))
     config["requires"] = _gen_requires(config.get("deps", dict(rpm=[])).get("rpm", []))
     config["prep"] = pkgr.config.get(config, "prep", "%autosetup")
@@ -41,48 +42,55 @@ def _generate_spec_str(config: T.Dict[str, T.Any]) -> str:
 
 
 def default_dockerfile(distribution, release) -> Path:
-    return pkgr.config.config_dir() / distribution / "Dockerfile"
+    return pkgr.config.work_dir() / "Dockerfile"
 
 
 @app.command()
 def generate(
     distribution: str,
+    arch: str = "x86_64",
     specfile: T.Optional[Path] = None,
     dockerfile: T.Optional[Path] = None,
     release: str = "latest",
     toml: Path = Path("pkgr.toml"),
 ):
     """Generate build files and Dockerfile"""
+    assert distribution
 
     pkgr.config.load(toml)
-    config = pkgr.config.config()
-    assert config
+    pkgr.config.set_val("distribution", (distribution, release))
+    assert "distribution" in pkgr.config.config()
 
-    assert distribution
-    specstr = _generate_spec_str(config)
+    pkgr.config.set_val("arch", arch)
+    assert "arch" in pkgr.config.config()
 
-    if specfile is None:
-        specfile = pkgr.config.config_dir() / f'{config["name"]}.spec'
-        logger.info(f"Using default specfile: {specfile}")
+    pkgr.config.setup_config_dir()
+    specstr = generate_spec_str()
 
-    with specfile.open("w") as f:
-        f.write(specstr)
-    logger.info(f"Wrote {specfile}")
+    specfile = (
+        pkgr.config.work_dir() / f'{pkgr.config.get_val("name")}.spec'
+        if specfile is None
+        else specfile
+    )
+
+    specfile.write_text(specstr)
+    logger.info(f"Wrote specfile {specfile}")
 
     dockerfile = (
         default_dockerfile(distribution, release) if dockerfile is None else dockerfile
     )
-    pkgr.docker.write_docker(dockerfile, config, distribution, release)
+    pkgr.docker.write_docker(dockerfile, distribution, release)
 
 
 @app.command()
 def build(
     distribution: str,
-    dockerfile: T.Optional[Path] = None,
     release: str = "latest",
+    arch: str = "x86_64",
+    dockerfile: T.Optional[Path] = None,
     toml: Path = Path("pkgr.toml"),
 ):
-    pkgr.config.load(toml)
+    generate(distribution, arch, None, dockerfile, release, toml)
     dockerfile = (
         default_dockerfile(distribution, release) if dockerfile is None else dockerfile
     )
