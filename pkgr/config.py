@@ -10,12 +10,14 @@ import toml  # type:ignore
 
 from loguru import logger
 
+import pkgr.archive
 
 config_dir_: Path = Path(".").resolve()
 
 # declare type.
 ConfigType = T.MutableMapping[str, T.Any]
 config_: ConfigType = {}
+
 
 def _dict2str(val, basepath: T.Optional[Path] = None) -> str:
     if "file" in val:
@@ -113,6 +115,7 @@ def walk(config: ConfigType, func: T.Callable) -> ConfigType:
     return config
 
 
+
 def setup_config_dir(config: ConfigType = {}):
     """Make sure work directory is ready.
 
@@ -135,16 +138,17 @@ def setup_config_dir(config: ConfigType = {}):
         ". For example `.#pkgr-0.1.0.tar.gz'"
     )
     src, tgt = srcstr
+    tgtfile = work_dir() / tgt
+
     try:
         urlparse(src)
-        # it is a URL
+        raise NotImplementedError("URL support is not implemnted")
     except Exception:
         # its a  filesystem.
         src = Path(src)
-        assert src.is_dir(), f"{src} is not a directory"
+        assert src.is_dir(), f"Source directory {src} is not a directory"
+        pkgr.archive.write_archive(tgtfile, src)
 
-    # tgt must exists
-    tgtfile = work_dir() / tgt
     assert tgtfile.exists(), f"{tgtfile} is not created."
 
     config_["source"] = tgt
@@ -186,7 +190,7 @@ def test_config_subs():
     assert config["version"] in config["source"]
 
 
-def test_source_reewrite():
+def test_source_rewrite():
     sdir = Path(__file__).parent
     configfile = sdir / ".." / "pkgr.toml"
     config = load(configfile)
