@@ -6,7 +6,7 @@ maintainer = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
 description = './README.md'
 license = 'GNUv3'
 url = "https://github.com/dilawar/pkgr"
-source = "."
+source = ".#pkgr-${version}.tar.gz"
 
 [compile]
 bash = '''

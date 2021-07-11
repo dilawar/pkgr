@@ -69,6 +69,7 @@ get_prepare	pkgr/data.py	/^def get_prepare(dist, release) -> str:$/;"	f
 get_val	pkgr/config.py	/^def get_val(key: str, default=None):$/;"	f
 json	pkgr/data.py	/^import json$/;"	i
 load	pkgr/config.py	/^def load(tomlfile: Path):$/;"	f
+logger	pkgr/config.py	/^from loguru import logger$/;"	i
 logger	pkgr/data.py	/^from loguru import logger$/;"	i
 logger	pkgr/docker.py	/^from loguru import logger$/;"	i
 logger	pkgr/pkgr.py	/^from loguru import logger$/;"	i
@@ -84,14 +85,17 @@ pkgr	pkgr/rpm.py	/^import pkgr.config$/;"	i
 pkgr	pkgr/rpm.py	/^import pkgr.data$/;"	i
 pkgr	pkgr/rpm.py	/^import pkgr.docker$/;"	i
 pkgr	pkgr/rpm.py	/^import pkgr.templates$/;"	i
+re	pkgr/config.py	/^import re$/;"	i
 re	pkgr/data.py	/^import re$/;"	i
 request	pkgr/data.py	/^import urllib.request$/;"	i
+rewrite	pkgr/config.py	/^def rewrite(val: str, k: str, config: T.Dict[str, T.Any]) -> T.Any:$/;"	f
 rpm	pkgr/pkgr.py	/^import pkgr.rpm$/;"	i
 run_docker	pkgr/docker.py	/^def run_docker(label):$/;"	f
 subprocess	pkgr/docker.py	/^import subprocess$/;"	i
 sys	pkgr/docker.py	/^import sys$/;"	i
 templates	pkgr/docker.py	/^import pkgr.templates$/;"	i
 templates	pkgr/rpm.py	/^import pkgr.templates$/;"	i
+test_config_subs	pkgr/config.py	/^def test_config_subs():$/;"	f
 test_install_cmds	pkgr/data.py	/^def test_install_cmds():$/;"	f
 test_version	tests/test_pkgr.py	/^def test_version():$/;"	f
 toml	pkgr/config.py	/^import toml$/;"	i
@@ -101,4 +105,5 @@ typer	pkgr/pkgr.py	/^import typer$/;"	i
 typer	pkgr/rpm.py	/^import typer$/;"	i
 ubuntu	pkgr/data.py	/^    ubuntu={$/;"	v
 urllib	pkgr/data.py	/^import urllib.request$/;"	i
+walk	pkgr/config.py	/^def walk(config: T.Dict[str, T.Any], func: T.Callable):$/;"	f
 write_docker	pkgr/docker.py	/^def write_docker(dockerfile, config, distribution: str, release: str):$/;"	f

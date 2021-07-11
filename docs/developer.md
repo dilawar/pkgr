@@ -1,0 +1,1 @@
+- Assumes that `pkgr.toml` is in the source directory and is at the top-most level.
