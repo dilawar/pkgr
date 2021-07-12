@@ -8,6 +8,8 @@ import urllib.request
 import json
 import re
 
+import pkgr.config
+
 
 IMAGES = dict(
     opensuse={"latest": "opensuse/tumbleweed", "15.3": "opensuse/leap:15.3"},
@@ -23,9 +25,9 @@ IMAGES = dict(
 # prepare section for docker image.
 PREPARE = json.loads(
     """{
-        "debian.*|ubuntu.*" : "RUN apt update",
-        "opensuse.*" : "RUN zypper ref",
-        "centos.*" : "RUN yum install -y epel-release"
+        "debian.*|ubuntu.*" : "apt update",
+        "opensuse.*" : "zypper ref",
+        "centos.*" : "yum install -y epel-release"
         }"""
 )
 
@@ -60,19 +62,20 @@ def _get_best_match(data: T.Dict[str, T.Any], key: str) -> T.Any:
     return val
 
 
-def get_install_cmd(dist: str, release: str) -> str:
-    key = f"{dist}-{release}"
+def get_install_cmd() -> str:
+    key = pkgr.config.get_val("distribution")
     return str(_get_best_match(INSTALL_CMDS, key))
 
 
-def get_prepare(dist: str, release: str) -> str:
-    key = f"{dist}-{release}"
+def get_prepare() -> str:
+    key = pkgr.config.get_val("distribution")
     return str(_get_best_match(PREPARE, key))
 
 
-def get_image(distribution: str, release: str = "latest") -> str:
+def get_image() -> str:
     global IMAGES
-    dist = distribution.lower()
+    dist, release = pkgr.config.get_val("distribution").split("-")
+    dist = dist.lower()
     if dist not in IMAGES:
         logger.warning(f"{dist} is not supported. Supported OS: {IMAGES.keys()}")
         quit(0)
@@ -87,8 +90,8 @@ def get_image(distribution: str, release: str = "latest") -> str:
 #     return [x["name"] for x in tags["results"]]
 
 
-def get_default_installs(dist: str, release: str) -> str:
-    key = f"{dist}{release}"
+def get_default_installs() -> str:
+    key = pkgr.config.get_val("distribution")
     return str(_get_best_match(DEFAULT_APPS, key))
 
 

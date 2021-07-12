@@ -1,5 +1,4 @@
-from pkgr import __version__
-
+import pkgr
 
 def test_version():
-    assert __version__
+    assert pkgr.__version__

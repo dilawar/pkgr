@@ -191,7 +191,7 @@ def load(tomlfile: Path) -> ConfigType:
     global config_dir_
     config_dir_ = tomlfile.resolve().parent
     config_ = walk(toml.load(tomlfile), rewrite)
-    config_['pkgr_version'] = pkgr.__version__
+    config_["pkgr_version"] = pkgr.__version__
     replace_file_with_content("description")
     replace_file_with_content("changelog")
     return config_
@@ -214,6 +214,10 @@ def work_dir() -> Path:
     wdir = config_dir_ / f"{pkgr.config.get_val('distribution')}"
     wdir.mkdir(parents=True, exist_ok=True)
     return wdir
+
+
+def get_distribution() -> T.Tuple[str, str]:
+    return get_val("distribution").split("-")
 
 
 def test_config_subs():

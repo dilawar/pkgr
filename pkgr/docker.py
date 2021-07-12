@@ -3,72 +3,61 @@ __email__ = "dilawar.s.rajput@gmail.com"
 
 import sys
 import subprocess
+import time
+import typing as T
+
+from pathlib import Path
+
+from loguru import logger
+import docker
+
 
 import pkgr.data
 import pkgr.config
 
-from pathlib import Path
-from loguru import logger
 
 DOCKER_BUILD_DIR = "/pkgr/rpm"
 
-# Dockefile template.
-DOCKER = (
-    """
-FROM {image}
-MAINTAINER {author}
-"""
-    + f"""
 
-# TODO: debian?
-# Make sure that `.` has the required layout.
-ADD . {DOCKER_BUILD_DIR}
-WORKDIR {DOCKER_BUILD_DIR}
-"""
-    + """
+def init_docker_container(image: str):
+    client = docker.DockerClient(base_url="unix://var/run/docker.sock", timeout=4)
 
-# Prepare docker image. Call `apt update`, setup additional repo etc.
-{prepare}
-
-# Install required packages to build successfully.
-{install}
-
-# Extra RUN ....
-{run}
-
-# CMD .. which build the package. e.g. rpmbuild -a ... etc.
-{cmd}
-"""
-)
+    return client.containers.run(
+        image,
+        tty=True,
+        detach=True,
+        auto_remove=True,
+        mounts=[
+            docker.types.Mount(
+                target=DOCKER_BUILD_DIR, source=str(pkgr.config.work_dir()), type="bind"
+            )
+        ],
+        working_dir=DOCKER_BUILD_DIR,
+    )
 
 
-def _get_run_commands(distribution: str, release: str) -> str:
-    assert distribution
-    assert release
-    logger.info(f"Generating required install list for {distribution}-{release}")
-    INSTALL_CMD: str = pkgr.data.get_install_cmd(distribution, release)
-    TO_INSTALL: str = pkgr.data.get_default_installs(distribution, release)
-    runs = [f"{INSTALL_CMD} {TO_INSTALL}"]
-    return "\n".join([f"RUN {x}" for x in runs])
+def get_run_commands() -> str:
+    INSTALL_CMD: str = pkgr.data.get_install_cmd()
+    TO_INSTALL: str = pkgr.data.get_default_installs()
+    return f"{INSTALL_CMD} {TO_INSTALL}"
 
 
-def add_build_depdencies(distribution: str, release: str):
+def add_build_depdencies():
     builddeps = pkgr.common.get_val_dist_specific("builddeps", "rpm")
     assert builddeps
-    install_cmd = pkgr.data.get_install_cmd(distribution, release)
+    install_cmd = pkgr.data.get_install_cmd()
     assert install_cmd
-    return f"RUN {install_cmd} {' '.join(builddeps)}"
+    return f"{install_cmd} {' '.join(builddeps)}"
 
 
-def add_build_command(pkgtype: str, cmd_options) -> str:
+def add_build_commands(pkgtype: str, cmd_options) -> T.List[str]:
     if pkgtype == "rpm":
-        pkg_build_cmd = pkgr.rpm.build_command(cmd_options)
+        return pkgr.rpm.build_command(cmd_options)
     else:
         raise NotImplementedError(f"{pkgtype} is not supported.")
-    return f"CMD {pkg_build_cmd}"
 
 
-def run_docker(image: str, pkgtype: str):
+def run_docker(image: str, pkgtype: str) -> str:
     """Run docker"""
     extra = []
     builddir = pkgr.docker.DOCKER_BUILD_DIR
@@ -84,8 +73,9 @@ def run_docker(image: str, pkgtype: str):
         f"pkgr-{pkgtype}-{pkgr.config.get_val('distribution')}"
         + f"-{pkgr.config.get_val('arch')}"
     )
-    cmd = ["docker", "run", "-l", container_name, "-t", *extra, image]
+    cmd = ["docker", "run", "--name", container_name, "-t", *extra, image]
     logger.info(f"Running: {' '.join(cmd)}")
+    return container_name
 
     popen = subprocess.Popen(
         cmd,
@@ -102,45 +92,34 @@ def run_docker(image: str, pkgtype: str):
     popen.wait(500)
 
 
-def write_docker(pkgtype: str, *, cmd_options: str = ""):
-    global DOCKER
-
-    author = pkgr.config.get_val("author")
-    maintainer = pkgr.config.get_val("maintainer", author)
-
-    distribution, release = pkgr.config.get_val("distribution").split("-")
-    assert distribution
-    assert release
-
-    image = pkgr.data.get_image(distribution, release)
-
-    prepare = pkgr.data.get_prepare(distribution, release)
-    run = _get_run_commands(distribution, release)
-    install = add_build_depdencies(distribution, release)
-
-    cmd = add_build_command("rpm", cmd_options)
-
-    __c = pkgr.common.check_valid_str
-
-    dockerfile = pkgr.common.default_dockerfile()
-    with dockerfile.open("w") as f:
-        DOCKER = DOCKER.format(
-            image=__c(image),
-            author=__c(author),
-            maintainer=__c(maintainer),
-            prepare=__c(prepare),
-            install=__c(install),
-            run=__c(run),
-            cmd=__c(cmd),
-        )
-        f.write(DOCKER)
-    logger.info(f"Wrote docker file to {dockerfile}")
+def copy_artifact(container):
+    pass
 
 
-def build(dockerfile: Path, pkgtype: str):
+def run_in_container(container, cmds):
+    for cmd in cmds:
+        logger.info(f"Executing in container: `{cmd}`")
+        res = container.exec_run(cmd, stream=True, demux=False)
+        for line in res.output:
+            # logger.info(f"{line.decode('utf8').strip()}")
+            print(f"{line.decode('utf8')}", end="")
+            sys.stdout.flush()
+
+
+def build(pkgtype: str, cmd_options):
     """Build dockerfile"""
-    logger.info(f"Building using {dockerfile} for package type {pkgtype}")
-    label = "pkgr/build"
-    cmd = ["docker", "build", "-t", label, "."]
-    subprocess.run(cmd, check=True, cwd=dockerfile.parent)
-    run_docker(label, pkgtype)
+
+    image = pkgr.data.get_image()
+    assert image
+    logger.info(f"Creating a container from {image}")
+
+    container = init_docker_container(image)
+    time.sleep(2)
+
+    prepare = pkgr.data.get_prepare()
+    run = get_run_commands()
+    install = add_build_depdencies()
+    run_in_container(container, [prepare, run, install])
+
+    buildcmd = add_build_commands("rpm", cmd_options)
+    run_in_container(container, buildcmd)

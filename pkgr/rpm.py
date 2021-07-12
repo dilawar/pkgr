@@ -80,17 +80,15 @@ def list_requires() -> T.List[str]:
     return pkgr.common.get_val_dist_specific("deps", "rpm")
 
 
-def build_command(extra: str) -> str:
+def build_command(extra: str) -> T.List[str]:
     import platform
 
     specfile = pkgr.common.default_specfile()
     arch = pkgr.config.get_val("arch") or platform.machine()
     assert arch
-    # the build command is run in appropriate directory.
-    buildroot = pkgr.docker.DOCKER_BUILD_DIR
     cmds = [f"rpmbuild -ba --target {arch} SPECS/{specfile.name}"]
-    cmds.append(f"rpmlint RPMS/{arch}/{pkgr.config.get_val('name')}*.rpm")
-    return " && ".join(cmds)
+    cmds.append(f"bash -c \"rpmlint RPMS/{arch}/{pkgr.config.get_val('name')}*.rpm\"")
+    return cmds
 
 
 def generate_spec_str(options: T.Dict = {}) -> str:
@@ -125,7 +123,6 @@ def generate(
     arch: str = "x86_64",
     release: str = "latest",
     toml: Path = Path("pkgr.toml"),
-    rpmbuild_cmd_options: str = "",
     enable_debug_pkg: bool = False,
     overwrite: bool = True,
 ):
@@ -156,9 +153,6 @@ def generate(
         specfile.write_text(specstr)
         logger.info(f"Wrote specfile {specfile}")
 
-    dockerfile = pkgr.common.default_dockerfile()
-    pkgr.docker.write_docker("rpm", cmd_options=rpmbuild_cmd_options)
-
 
 @app.command()
 def build(
@@ -175,13 +169,9 @@ def build(
         release,
         toml,
         enable_debug_pkg=enable_debug_pkg,
-        rpmbuild_cmd_options=rpmbuild_cmd_options,
         overwrite=True,
     )
-
-    dockerfile = pkgr.common.default_dockerfile()
-    assert dockerfile.exists(), f"{dockerfile} not found. Did you run the generate step"
-    pkgr.docker.build(dockerfile, "rpm")
+    pkgr.docker.build("rpm", rpmbuild_cmd_options)
 
 
 if __name__ == "__main__":
