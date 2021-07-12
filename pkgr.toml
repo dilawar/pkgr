@@ -4,7 +4,7 @@ summary = "Package Linux pacakges"
 author = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
 maintainer = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
 description = 'file://README.md'
-license = 'GNUv3'
+license = 'GPLv3'
 url = "https://github.com/dilawar/pkgr"
 source = "file://.#pkgr-${version}.tar.gz"
 

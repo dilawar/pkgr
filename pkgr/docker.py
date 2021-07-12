@@ -54,7 +54,7 @@ def add_build_depdencies(distribution: str, release: str):
 
 
 def add_build_command(specname: str, cmd_options: str) -> str:
-    return f"CMD rpmbuild -ba {cmd_options} SPECS/{specname} && rpmlint -i RPMS/*/*.rpm"
+    return f"CMD rpmbuild -ba {cmd_options} SPECS/{specname} && rpmlint RPMS/*/*.rpm"
 
 
 def run_docker(label: str, pkgtype: str):
