@@ -16,6 +16,10 @@ rpm = ["python3-devel"]
 # OS spefic here.
 fedora = ["python3-devel"]
 
+[deps]
+rpm=''
+deb=''
+
 [configure]
 rpm = ''
 deb = ''

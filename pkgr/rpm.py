@@ -4,10 +4,10 @@ __email__ = "dilawar.s.rajput@gmail.com"
 import typing as T
 
 import pkgr.config
-import pkgr.templates
 import pkgr.config
 import pkgr.data
 import pkgr.docker
+import pkgr.common
 
 from pathlib import Path
 from loguru import logger
@@ -35,44 +35,55 @@ Source0:    {source}
 {description}
 
 %prep
-{configure}
+{configure_section}
 
 %build
-{build}
+{build_section}
 
 %install
-{install}
+{install_section}
 
 %files
-{files}
+{files_section}
 
 %changelog
-{changelog}
+{changelog_section}
 """
 
 
 def _gen_build_requires(builddeps: T.List[str]) -> str:
+    assert isinstance(builddeps, T.List), builddeps
     return "\n".join([f"BuildRequires: {x}" for x in builddeps])
 
 
 def _gen_requires(reqs: T.List[str]) -> str:
+    assert isinstance(reqs, T.List), reqs
     return "\n".join([f"Requires: {x}" for x in reqs])
+
+
+def list_build_requires() -> T.List[str]:
+    return pkgr.common.get_list_pkgs("builddeps", "rpm")
+
+
+def list_requires() -> T.List[str]:
+    return pkgr.common.get_list_pkgs("deps", "rpm")
 
 
 def generate_spec_str() -> str:
     options = {}
-    options["build_requires"] = _gen_build_requires(options["builddeps"].get("rpm", []))
-    options["requires"] = _gen_requires(
-        options.get("deps", dict(rpm=[])).get("rpm", [])
+    options["build_requires"] = _gen_build_requires(list_build_requires())
+    options["requires"] = _gen_requires(list_requires())
+
+    options["configure_section"] = pkgr.config.get_val("configure.spec") or "%autosetup"
+    options["build_section"] = (
+        pkgr.config.get_val("build.rpm") or "%optionsure\n%make_build"
     )
-    options["optionsure"] = pkgr.config.get_val("optionsure.spec") or "%autosetup"
-    options["build"] = pkgr.config.get_val("build.rpm") or "%optionsure\n%make_build"
-    options["install"] = (
+    options["install_section"] = (
         pkgr.config.get_val("install.rpm") or "rm -rf $SPEC_TEMPLATE\n%make_install"
     )
-    options["files"] = pkgr.config.get_val("files") or ""
-    options["changelog"] = pkgr.config.get_val("changelog.rpm") or ""
-    return SPEC_TEMPLATE.format(**options)
+    options["files_section"] = pkgr.config.get_val("files") or ""
+    options["changelog_section"] = pkgr.config.get_val("changelog.rpm") or ""
+    return SPEC_TEMPLATE.format(**options, **pkgr.config.config())
 
 
 def default_dockerfile(distribution, release) -> Path:
@@ -100,7 +111,7 @@ def generate(
     assert distribution
 
     pkgr.config.load(toml)
-    pkgr.config.set_val("distribution", (distribution, release))
+    pkgr.config.set_val("distribution", f"{distribution}-{release}")
     assert "distribution" in pkgr.config.config()
 
     pkgr.config.set_val("arch", arch)

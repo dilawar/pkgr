@@ -25,7 +25,7 @@ PREPARE = json.loads(
     """{
         "debian.*|ubuntu.*" : "RUN apt update",
         "opensuse.*" : "RUN zypper ref",
-        "centos7.*" : "RUN yum install -y epel-release",
+        "centos-7.*" : "RUN yum install -y epel-release",
         "centos.*|fedora.*" : "RUN dnf install -y epel-release"
         }"""
 )
@@ -36,7 +36,7 @@ INSTALL_CMDS = json.loads(
     """{
         "debian.*|ubuntu.*" : "apt install -y",
         "opensuse.*" : "zypper install -y",
-        "centos7.*" : "yum install -y",
+        "centos-7.*" : "yum install -y",
         "centos.*|fedora.*" : "dnf install -y"
         }"""
 )
@@ -55,16 +55,18 @@ def _get_best_match(data: T.Dict[str, T.Any], key: str) -> T.Any:
     _keys = list(data.keys())
     _k = [x for x in _keys if re.match(x, key)]
     assert _k, f"No match found for {key}"
-    return data[_k[0]]
+    val = data[_k[0]]
+    assert val
+    return val
 
 
 def get_install_cmd(dist: str, release: str) -> str:
-    key = f"{dist}{release}"
+    key = f"{dist}-{release}"
     return str(_get_best_match(INSTALL_CMDS, key))
 
 
 def get_prepare(dist: str, release: str) -> str:
-    key = f"{dist}{release}"
+    key = f"{dist}-{release}"
     return str(_get_best_match(PREPARE, key))
 
 

@@ -15,7 +15,9 @@ import pkgr.archive
 config_dir_: Path = Path(".").resolve()
 
 # declare type.
-ConfigType = T.MutableMapping[str, T.Any]
+ConfigValType = T.Union[str, T.List[str], T.Mapping[str, str]]
+ConfigType = T.Mapping[str, ConfigValType]
+
 config_: ConfigType = {}
 
 
@@ -30,7 +32,7 @@ def _dict2str(val, basepath: T.Optional[Path] = None) -> str:
     return ""
 
 
-def _to_str(val: T.Any, basepath: T.Optional[Path] = None) -> str:
+def _to_str(val: ConfigValType, basepath: T.Optional[Path] = None) -> str:
     if isinstance(val, list):
         return "\n".join(val)
     if isinstance(val, dict):
@@ -38,7 +40,7 @@ def _to_str(val: T.Any, basepath: T.Optional[Path] = None) -> str:
     return str(val)
 
 
-def set_val(key: str, val: T.Any, subconfig=None):
+def set_val(key: str, val: ConfigValType, subconfig=None):
     global config_
     assert key
     assert val
@@ -46,7 +48,6 @@ def set_val(key: str, val: T.Any, subconfig=None):
         subconfig = config_
     if "." not in key:
         subconfig[key] = val
-        print(config_)
         return
     fs = key.split(".", 1)
     return set_val(fs[1], val, subconfig[fs[0]])
@@ -71,13 +72,12 @@ def get_val(key: str, default=None):
     while keys:
         k = keys.pop(0)
         val = val.get(k, default)
-        if default is not None and val == default:
-            break
-    assert val is not None, f"{key} has missing value"
+        if val is None:
+            return None
     return _to_str(val, config_dir_)
 
 
-def rewrite(val: str, k: str, config: ConfigType) -> T.Any:
+def rewrite(val: str, k: str, config: ConfigType) -> ConfigValType:
     """rewrite a term by replacing ${foo} with config[foo].
 
     Parameters
@@ -134,7 +134,7 @@ def setup_config_dir(config: ConfigType = {}):
     srcstr = config_["source"].split("#", 1)
     assert len(srcstr) == 2, (
         f"Invalid format source. Expected <file_or_url>#<archive_path>"
-        ". For example `.#pkgr-0.1.0.tar.gz'"
+        ". For example `file://.#pkgr-0.1.0.tar.gz'"
     )
     src, tgt = srcstr
     tgtfile = work_dir() / "SOURCES" / tgt
@@ -144,6 +144,8 @@ def setup_config_dir(config: ConfigType = {}):
         raise NotImplementedError("URL support is not implemnted")
     except Exception:
         # its a  filesystem.
+        if "file://" in src:
+            src = src[7:]
         src = Path(src)
         assert src.is_dir(), f"Source directory {src} is not a directory"
         pkgr.archive.write_archive(tgtfile, src)
@@ -175,8 +177,7 @@ def work_dir() -> Path:
     global config_
     assert config_dir_.exists(), "Did you call pkgr.config.load?"
     assert "distribution" in config_, "'distribution' not found."
-    dist = config_["distribution"]
-    wdir = config_dir_ / f"{dist[0]}-{dist[1]}"
+    wdir = config_dir_ / f"{pkgr.config.get_val('distribution')}"
     wdir.mkdir(parents=True, exist_ok=True)
     return wdir
 

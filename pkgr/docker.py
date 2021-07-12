@@ -4,7 +4,6 @@ __email__ = "dilawar.s.rajput@gmail.com"
 import sys
 import subprocess
 
-import pkgr.templates
 import pkgr.data
 import pkgr.config
 
@@ -37,6 +36,9 @@ WORKDIR {RPM_BUILD_DIR}
 
 
 def _get_run_commands(distribution: str, release: str) -> str:
+    assert distribution
+    assert release
+    logger.info(f"Generating required install list for {distribution}-{release}")
     INSTALL_CMD: str = pkgr.data.get_install_cmd(distribution, release)
     TO_INSTALL: str = pkgr.data.get_default_installs(distribution, release)
     runs = [f"{INSTALL_CMD} {TO_INSTALL}"]
@@ -44,10 +46,11 @@ def _get_run_commands(distribution: str, release: str) -> str:
 
 
 def add_build_depdencies(distribution: str, release: str):
-    builddeps = pkgr.config.get_val(f"builddeps.{distribution}")
+    builddeps = pkgr.common.get_list_pkgs("builddeps", "rpm")
+    assert builddeps
     install_cmd = pkgr.data.get_install_cmd(distribution, release)
     assert install_cmd
-    return f"RUN {install_cmd} {builddeps}"
+    return f"RUN {install_cmd} {' '.join(builddeps)}"
 
 
 def add_build_command(specname: str) -> str:
@@ -83,16 +86,18 @@ def write_docker(dockerfile, distribution: str, release: str):
     install = add_build_depdencies(distribution, release)
     cmd = add_build_command(f"{pkgr.config.get_val('name')}.spec")
 
+    __c = pkgr.common.check_valid_str
+
     with dockerfile.open("w") as f:
         DOCKER = DOCKER.format(
-            image=image,
-            author=author,
-            maintainer=maintainer,
-            prepare=prepare,
-            install=install,
-            run=run,
-            cmd=cmd,
-            RPM_BUILD_DIR="/root/rpmbuild"
+            image=__c(image),
+            author=__c(author),
+            maintainer=__c(maintainer),
+            prepare=__c(prepare),
+            install=__c(install),
+            run=__c(run),
+            cmd=__c(cmd),
+            RPM_BUILD_DIR="/root/rpmbuild",
         )
         f.write(DOCKER)
     logger.info(f"Wrote docker file to {dockerfile}")
