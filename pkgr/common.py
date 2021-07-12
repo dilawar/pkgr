@@ -16,7 +16,9 @@ def get_val_dist_specific(key: str, pkgtype: str) -> T.List[str]:
         or pkgr.config.get_val(f"{key}.{dist}")
         or pkgr.config.get_val(f"{key}.{pkgtype}")
     )
-    assert vals is not None, f"Nothing found for {key}.{pkgtype} in config"
+    if vals is None:
+        return []
+
     vals = vals.strip() or []
     if isinstance(vals, str):
         vals = [x for x in vals.split() if x.strip()]

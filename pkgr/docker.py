@@ -10,16 +10,22 @@ import pkgr.config
 from pathlib import Path
 from loguru import logger
 
+DOCKER_BUILD_DIR = "/pkgr/rpm"
+
 # Dockefile template.
-DOCKER = """
+DOCKER = (
+    """
 FROM {image}
 MAINTAINER {author}
+"""
+    + f"""
 
-# workdir: /root/rpmbuild for rpm.
 # TODO: debian?
 # Make sure that `.` has the required layout.
-ADD . {RPM_BUILD_DIR}
-WORKDIR {RPM_BUILD_DIR}
+ADD . {DOCKER_BUILD_DIR}
+WORKDIR {DOCKER_BUILD_DIR}
+"""
+    + """
 
 # Prepare docker image. Call `apt update`, setup additional repo etc.
 {prepare}
@@ -33,6 +39,7 @@ WORKDIR {RPM_BUILD_DIR}
 # CMD .. which build the package. e.g. rpmbuild -a ... etc.
 {cmd}
 """
+)
 
 
 def _get_run_commands(distribution: str, release: str) -> str:
@@ -64,11 +71,14 @@ def add_build_command(pkgtype: str, cmd_options) -> str:
 def run_docker(image: str, pkgtype: str):
     """Run docker"""
     extra = []
+    builddir = pkgr.docker.DOCKER_BUILD_DIR
     if pkgtype == "rpm":
         extra = [
             "--mount",
-            f"type=bind,source={pkgr.config.work_dir()},target=/root/rpmbuild",
+            f"type=bind,source={pkgr.config.work_dir()},target={builddir}",
         ]
+    else:
+        raise NotImplementedError(f"Not implemented: {pkgtype}")
 
     container_name = (
         f"pkgr-{pkgtype}-{pkgr.config.get_val('distribution')}"
@@ -122,7 +132,6 @@ def write_docker(pkgtype: str, *, cmd_options: str = ""):
             install=__c(install),
             run=__c(run),
             cmd=__c(cmd),
-            RPM_BUILD_DIR="/root/rpmbuild",
         )
         f.write(DOCKER)
     logger.info(f"Wrote docker file to {dockerfile}")

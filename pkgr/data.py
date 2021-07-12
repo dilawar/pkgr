@@ -45,7 +45,7 @@ INSTALL_CMDS = json.loads(
 DEFAULT_APPS = json.loads(
     """{
         "debian.*|ubuntu.*" : "dpkg-dev dpkg build-depends pbuilder",
-        "opensuse.*|centos.*|fedora.*" : "rpmlint rpm rpm-devel rpmdevtools"
+        "opensuse.*|centos.*|fedora.*" : "rpmlint rpm rpm-build rpmdevtools"
         }"""
 )
 

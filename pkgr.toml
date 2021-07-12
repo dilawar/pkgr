@@ -8,16 +8,11 @@ license = 'GPLv3'
 url = "https://github.com/dilawar/pkgr"
 source = "file://.#pkgr-${version}.tar.gz"
 
-[extra]
-rpm = ['BuildArchitectures: noarch']
-
 [builddeps]
 # deb is default for all debian based distro
 deb = ["python3-dev"]
 # rpm is default for all rpm based distro
-rpm = ["python3-devel"]
-# OS spefic here.
-fedora = ["python3-devel"]
+rpm = ["python3-devel", "python3-setuptools"]
 
 [deps]
 rpm=''
