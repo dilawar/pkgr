@@ -10,6 +10,7 @@ import toml  # type:ignore
 
 from loguru import logger
 
+import pkgr
 import pkgr.archive
 
 config_dir_: Path = Path(".").resolve()
@@ -190,6 +191,7 @@ def load(tomlfile: Path) -> ConfigType:
     global config_dir_
     config_dir_ = tomlfile.resolve().parent
     config_ = walk(toml.load(tomlfile), rewrite)
+    config_['pkgr_version'] = pkgr.__version__
     replace_file_with_content("description")
     replace_file_with_content("changelog")
     return config_

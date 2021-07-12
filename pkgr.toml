@@ -37,7 +37,9 @@ rpm='''
 # files to install
 [files]
 rpm='''
-%{python3_sitelib}
+/usr/bin/pkgr
+%{python3_sitelib}/pkgr/
+%ghost %{python3_sitelib}/*egg-info
 '''
 
 [changelog]

@@ -53,13 +53,17 @@ def add_build_depdencies(distribution: str, release: str):
     return f"RUN {install_cmd} {' '.join(builddeps)}"
 
 
-def add_build_command(specname: str) -> str:
-    return f'CMD ["rpmbuild", "-ba", "SPECS/{specname}"]'
+def add_build_command(specname: str, cmd_options: str) -> str:
+    return f"CMD rpmbuild -ba {cmd_options} SPECS/{specname}"
 
 
-def run_docker(label: str):
-    cmd = ["docker", "run", "-t", label]
+def run_docker(label: str, pkgtype: str):
+    extra = []
+    if pkgtype == "rpm":
+        extra = ["--mount", f"type=bind,source={pkgr.config.work_dir()},target=/root/pkgbuild"]
+    cmd = ["docker", "run", "-t", *extra, label]
     logger.info(f"Running: {' '.join(cmd)}")
+
     popen = subprocess.Popen(
         cmd,
         stdin=subprocess.PIPE,
@@ -75,7 +79,7 @@ def run_docker(label: str):
     popen.wait(500)
 
 
-def write_docker(dockerfile, distribution: str, release: str):
+def write_docker(dockerfile, distribution: str, release: str, *, cmd_options: str = ""):
     global DOCKER
     author = pkgr.config.get_val("author")
     maintainer = pkgr.config.get_val("maintainer", author)
@@ -84,7 +88,8 @@ def write_docker(dockerfile, distribution: str, release: str):
     prepare = pkgr.data.get_prepare(distribution, release)
     run = _get_run_commands(distribution, release)
     install = add_build_depdencies(distribution, release)
-    cmd = add_build_command(f"{pkgr.config.get_val('name')}.spec")
+
+    cmd = add_build_command(f"{pkgr.config.get_val('name')}.spec", cmd_options)
 
     __c = pkgr.common.check_valid_str
 
@@ -103,11 +108,10 @@ def write_docker(dockerfile, distribution: str, release: str):
     logger.info(f"Wrote docker file to {dockerfile}")
 
 
-def build(dockerfile: Path):
+def build(dockerfile: Path, pkgtype: str):
     """Build dockerfile"""
-    logger.info(f"Building using {dockerfile}")
+    logger.info(f"Building using {dockerfile} for package type {pkgtype}")
     label = "pkgr/build"
-    subprocess.run(
-        ["docker", "build", "-t", label, "."], check=True, cwd=dockerfile.parent
-    )
-    run_docker(label)
+    cmd = ["docker", "build", "-t", label, "."]
+    subprocess.run(cmd, check=True, cwd=dockerfile.parent)
+    run_docker(label, pkgtype)
