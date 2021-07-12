@@ -76,11 +76,23 @@ def list_requires() -> T.List[str]:
     return pkgr.common.get_val_dist_specific("deps", "rpm")
 
 
+def build_command(extra: str) -> str:
+    import platform
+
+    specfile = pkgr.common.default_specfile()
+    arch = pkgr.config.get_val("arch") or platform.machine()
+    assert arch
+    # the build command is run in appropriate directory.
+    cmds = [f"rpmbuild -ba --target {arch} SPECS/{specfile.name}"]
+    cmds.append(f"rpmlint RPMS/{arch}/{pkgr.config.get_val('name')}*.rpm")
+    return " && ".join(cmds)
+
+
 def generate_spec_str(options: T.Dict = {}) -> str:
     options["build_requires"] = _gen_build_requires(list_build_requires())
     options["requires"] = _gen_requires(list_requires())
 
-    options["spec_extra"] = ' '.join(pkgr.common.get_val_dist_specific("extra", "rpm"))
+    options["spec_extra"] = " ".join(pkgr.common.get_val_dist_specific("extra", "rpm"))
 
     options["configure_section"] = pkgr.config.get_val("configure.spec") or "%autosetup"
     options["build_section"] = (
@@ -92,14 +104,6 @@ def generate_spec_str(options: T.Dict = {}) -> str:
     options["files_section"] = pkgr.config.get_val("files.rpm") or ""
     options["changelog_section"] = pkgr.config.get_val("changelog.rpm") or ""
     return SPEC_TEMPLATE.format(**options, **pkgr.config.config())
-
-
-def default_dockerfile(distribution, release) -> Path:
-    return pkgr.config.work_dir() / "Dockerfile"
-
-
-def default_specfile() -> Path:
-    return pkgr.config.work_dir() / "SPECS" / f'{pkgr.config.get_val("name")}.spec'
 
 
 def init_workdir_tree(wdir: Path):
@@ -140,17 +144,15 @@ def generate(
 
     init_workdir_tree(pkgr.config.work_dir())
 
-    specfile = default_specfile()
+    specfile = pkgr.common.default_specfile()
     if specfile.exists() and not overwrite:
         logger.warning(f"{specfile} already exists. Overwrite is {overwrite}.")
     else:
         specfile.write_text(specstr)
         logger.info(f"Wrote specfile {specfile}")
 
-    dockerfile = default_dockerfile(distribution, release)
-    pkgr.docker.write_docker(
-        dockerfile, distribution, release, cmd_options=rpmbuild_cmd_options
-    )
+    dockerfile = pkgr.common.default_dockerfile()
+    pkgr.docker.write_docker("rpm", cmd_options=rpmbuild_cmd_options)
 
 
 @app.command()
@@ -172,7 +174,7 @@ def build(
         overwrite=False,
     )
 
-    dockerfile = default_dockerfile(distribution, release)
+    dockerfile = pkgr.common.default_dockerfile()
     assert dockerfile.exists(), f"{dockerfile} not found. Did you run the generate step"
     pkgr.docker.build(dockerfile, "rpm")
 

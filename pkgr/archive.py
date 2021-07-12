@@ -16,7 +16,7 @@ def _to_files(txt: str, rootdir: Path) -> T.List[Path]:
 
 
 def list_src_files(source_dir: Path) -> T.List[Path]:
-    logger.info(f" Searching for files in {source_dir}")
+    logger.debug(f" Searching for files in {source_dir}")
     if (source_dir / ".git").exists():
         # git ls-files
         txt = subprocess.check_output(
@@ -69,7 +69,7 @@ def write_zip(outfile: Path, files, basedir: Path):
 
     with zipfile.ZipFile(outfile, "w") as zf:
         for f in files:
-            logger.info(f'  adding to archive: {f}')
+            logger.debug(f'  adding to archive: {f}')
             zf.write(f, arcname=(basedir / f))
 
 
@@ -78,7 +78,7 @@ def write_tarfile(outfile: Path, files, basedir: Path):
 
     with tarfile.open(outfile, "w") as tf:
         for f in files:
-            logger.info(f'  adding to archive: {f}')
+            logger.debug(f'  adding to archive: {f}')
             tf.add(f, arcname=(basedir / f))
 
 

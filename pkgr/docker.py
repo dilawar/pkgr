@@ -53,8 +53,12 @@ def add_build_depdencies(distribution: str, release: str):
     return f"RUN {install_cmd} {' '.join(builddeps)}"
 
 
-def add_build_command(specname: str, cmd_options: str) -> str:
-    return f"CMD rpmbuild -ba {cmd_options} SPECS/{specname} && rpmlint RPMS/*/*.rpm"
+def add_build_command(pkgtype: str, cmd_options) -> str:
+    if pkgtype == "rpm":
+        pkg_build_cmd = pkgr.rpm.build_command(cmd_options)
+    else:
+        raise NotImplementedError(f"{pkgtype} is not supported.")
+    return f"CMD {pkg_build_cmd}"
 
 
 def run_docker(label: str, pkgtype: str):
@@ -82,20 +86,27 @@ def run_docker(label: str, pkgtype: str):
     popen.wait(500)
 
 
-def write_docker(dockerfile, distribution: str, release: str, *, cmd_options: str = ""):
+def write_docker(pkgtype: str, *, cmd_options: str = ""):
     global DOCKER
+
     author = pkgr.config.get_val("author")
     maintainer = pkgr.config.get_val("maintainer", author)
+
+    distribution, release = pkgr.config.get_val("distribution").split("-")
+    assert distribution
+    assert release
+
     image = pkgr.data.get_image(distribution, release)
 
     prepare = pkgr.data.get_prepare(distribution, release)
     run = _get_run_commands(distribution, release)
     install = add_build_depdencies(distribution, release)
 
-    cmd = add_build_command(f"{pkgr.config.get_val('name')}.spec", cmd_options)
+    cmd = add_build_command("rpm", cmd_options)
 
     __c = pkgr.common.check_valid_str
 
+    dockerfile = pkgr.common.default_dockerfile()
     with dockerfile.open("w") as f:
         DOCKER = DOCKER.format(
             image=__c(image),
