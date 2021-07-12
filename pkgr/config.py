@@ -115,7 +115,6 @@ def walk(config: ConfigType, func: T.Callable) -> ConfigType:
     return config
 
 
-
 def setup_config_dir(config: ConfigType = {}):
     """Make sure work directory is ready.
 
@@ -138,7 +137,7 @@ def setup_config_dir(config: ConfigType = {}):
         ". For example `.#pkgr-0.1.0.tar.gz'"
     )
     src, tgt = srcstr
-    tgtfile = work_dir() / tgt
+    tgtfile = work_dir() / "SOURCES" / tgt
 
     try:
         urlparse(src)

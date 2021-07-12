@@ -45,6 +45,14 @@ def default_dockerfile(distribution, release) -> Path:
     return pkgr.config.work_dir() / "Dockerfile"
 
 
+def init_workdir_tree(wdir: Path):
+    """Equivalent to rpmdev-setuptree equivalent"""
+    assert wdir.exists() and wdir.is_dir()
+    for x in "BUILD RPMS SOURCES SPECS SRPMS".split():
+        (wdir / x).mkdir(exist_ok=True)
+        assert (wdir / x).is_dir()
+
+
 @app.command()
 def generate(
     distribution: str,
@@ -67,8 +75,10 @@ def generate(
     pkgr.config.setup_config_dir()
     specstr = generate_spec_str()
 
+    init_workdir_tree(pkgr.config.work_dir())
+
     specfile = (
-        pkgr.config.work_dir() / f'{pkgr.config.get_val("name")}.spec'
+        pkgr.config.work_dir() / "SPECS" / f'{pkgr.config.get_val("name")}.spec'
         if specfile is None
         else specfile
     )

@@ -2,14 +2,14 @@ __author__           = "Dilawar Singh"
 __email__            = "dilawar.s.rajput@gmail.com"
 
 RPM: str = """
-Name:     {name}
-Version:  {version}
-Release:  1%{{?dist}}
-Summary:  {summary}
+Name:       {name}
+Version:    {version}
+Release:    1%{{?dist}}
+Summary:    {summary}
 
-License: {license}
-URL: {url}
-Source0:  {source}
+License:    {license}
+URL:        {url}
+Source0:    {source}
 
 {build_requires}
 
@@ -34,15 +34,3 @@ Source0:  {source}
 {changelog}
 """
 
-DOCKER = """
-FROM {image}
-MAINTAINER {author}
-
-ADD . /work
-WORKDIR /work
-
-{prepare}
-{install}
-{run}
-{cmd}
-"""
