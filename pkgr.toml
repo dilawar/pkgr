@@ -3,7 +3,7 @@ version = '0.1.0'
 summary = "Package Linux pacakges"
 author = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
 maintainer = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
-description = 'file://.README.md'
+description = 'file://README.md'
 license = 'GNUv3'
 url = "https://github.com/dilawar/pkgr"
 source = "file://.#pkgr-${version}.tar.gz"
@@ -27,7 +27,8 @@ deb = ''
 [build]
 rpm = '''
 export PATH=$HOME/.local/bin:$PATH
-python3 -m pip install setuptools
+python3 -m pip install setuptools wheel poetry --upgrade
+python3 -m poetry build
 '''
 
 [install]
@@ -37,5 +38,5 @@ rpm='cd build && make install DESTDIR="${BP_DESTDIR}"'
 [files]
 
 [changelog]
-rpm='file://CHANGELOG.rpm'
-deb='file://CHANGELOG.deb'
+rpm='file://CHANGELOG.rpm.txt'
+deb='file://CHANGELOG.deb.txt'

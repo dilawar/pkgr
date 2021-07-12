@@ -15,8 +15,7 @@ import pkgr.archive
 config_dir_: Path = Path(".").resolve()
 
 # declare type.
-ConfigValType = T.Union[str, T.List[str], T.Mapping[str, str]]
-ConfigType = T.Mapping[str, ConfigValType]
+ConfigType = T.MutableMapping[str, T.Any]
 
 config_: ConfigType = {}
 
@@ -32,7 +31,7 @@ def _dict2str(val, basepath: T.Optional[Path] = None) -> str:
     return ""
 
 
-def _to_str(val: ConfigValType, basepath: T.Optional[Path] = None) -> str:
+def _to_str(val, basepath: T.Optional[Path] = None) -> str:
     if isinstance(val, list):
         return "\n".join(val)
     if isinstance(val, dict):
@@ -40,7 +39,7 @@ def _to_str(val: ConfigValType, basepath: T.Optional[Path] = None) -> str:
     return str(val)
 
 
-def set_val(key: str, val: ConfigValType, subconfig=None):
+def set_val(key: str, val, subconfig=None):
     global config_
     assert key
     assert val
@@ -53,15 +52,15 @@ def set_val(key: str, val: ConfigValType, subconfig=None):
     return set_val(fs[1], val, subconfig[fs[0]])
 
 
-def get(config: ConfigType, key: str, default=None):
+def get(config: ConfigType, key: str, default={}) -> str:
     keys = key.split(".")
     val = config
     while keys:
         k = keys.pop(0)
         val = val.get(k, default)
-        if default is not None and val == default:
+        if val == default:
             break
-    assert val is not None
+    assert val
     return _to_str(val, config_dir_)
 
 
@@ -77,8 +76,10 @@ def get_val(key: str, default=None):
     return _to_str(val, config_dir_)
 
 
-def rewrite(val: str, k: str, config: ConfigType) -> ConfigValType:
-    """rewrite a term by replacing ${foo} with config[foo].
+def rewrite(val: str, k: str, config: ConfigType):
+    """rewrite a term after:
+
+    1. replacing ${foo} with config[foo].
 
     Parameters
     ----------
@@ -100,7 +101,36 @@ def rewrite(val: str, k: str, config: ConfigType) -> ConfigValType:
     if config.get(m.group(1), None) is not None:
         assert isinstance(config[m.group(1)], str)
         val = val.replace(m.group(0), config[m.group(1)])
+
     return val
+
+
+def get_file_content(filestr: str) -> str:
+    assert filestr.startswith("file://")
+    file = pkgr.config.config_dir() / filestr[7:]
+    assert file.exists(), f"{filestr} did not resolve to a readable file: {file}"
+    return file.open().read()
+
+
+def replace_file_with_content(section) -> None:
+    # change file:// with the content of the file.
+    global config_
+    assert section
+    if section not in config_:
+        return
+
+    secval = config_[section]
+    if isinstance(secval, str):
+        if secval.startswith("file://"):
+            config_[section] = get_file_content(secval)
+        return
+
+    # it must be dict otherwise. Go one level deep and no deeper.
+    for k, val in config_[section].items():
+        if not isinstance(val, str):
+            continue
+        if val.startswith("file://"):
+            config_[section][k] = get_file_content(val)
 
 
 def walk(config: ConfigType, func: T.Callable) -> ConfigType:
@@ -160,6 +190,8 @@ def load(tomlfile: Path) -> ConfigType:
     global config_dir_
     config_dir_ = tomlfile.resolve().parent
     config_ = walk(toml.load(tomlfile), rewrite)
+    replace_file_with_content("description")
+    replace_file_with_content("changelog")
     return config_
 
 
