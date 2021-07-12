@@ -1,7 +1,9 @@
 # pkgr
 
-Create Linux packages RPM/DEB using docker. This is still a work in progress. See the github action
-for some example use cases.
+Create Linux packages RPM/DEB using docker.
+
+__This is still a work in progress. Its too early to write any documentation.
+See the github action for some example use cases.__
 
 ## TODO 
 
@@ -10,5 +12,5 @@ for some example use cases.
 
 ## Usage
 
-1. Create `pkgr.toml` file. See examples in `tests` directory.
+1. Create `pkgr.toml` file. See example in this repository. 
 2. Run `pkgr rpm build centos` etc.
