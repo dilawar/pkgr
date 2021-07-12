@@ -3,26 +3,35 @@ version = '0.1.0'
 summary = "Package Linux pacakges"
 author = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
 maintainer = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
-description = './README.md'
+description = 'file://.README.md'
 license = 'GNUv3'
 url = "https://github.com/dilawar/pkgr"
-source = ".#pkgr-${version}.tar.gz"
+source = "file://.#pkgr-${version}.tar.gz"
 
-[compile]
-bash = '''
+[builddeps]
+# deb is default for all debian based distro
+deb = ["python3-dev"]
+# rpm is default for all rpm based distro
+rpm = ["python3-devel"]
+# OS spefic here.
+fedora = ["python3-devel"]
+
+[configure]
+rpm = ''
+deb = ''
+
+[build]
+rpm = '''
 export PATH=$HOME/.local/bin:$PATH
 python3 -m pip install setuptools
 '''
 
 [install]
-bash='cd build && make install DESTDIR="${BP_DESTDIR}"'
-
-[builddeps]
-ubuntu = ["python3-dev"]
-centos = ["python39-devel"]
+rpm='cd build && make install DESTDIR="${BP_DESTDIR}"'
 
 # files to install
 [files]
 
 [changelog]
-file='CHANGELOG.md'
+rpm='file://CHANGELOG.md'
+deb='file://CHANGELOG.md'
