@@ -1,5 +1,5 @@
 name = 'pkgr'
-version = '0.1.0'
+version = '0.1.1'
 summary = "Package Linux pacakges"
 author = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
 maintainer = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
@@ -7,6 +7,9 @@ description = 'file://README.md'
 license = 'GNUv3'
 url = "https://github.com/dilawar/pkgr"
 source = "file://.#pkgr-${version}.tar.gz"
+
+[extra]
+rpm = ['BuildArchitectures: noarch']
 
 [builddeps]
 # deb is default for all debian based distro

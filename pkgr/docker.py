@@ -46,7 +46,7 @@ def _get_run_commands(distribution: str, release: str) -> str:
 
 
 def add_build_depdencies(distribution: str, release: str):
-    builddeps = pkgr.common.get_list_pkgs("builddeps", "rpm")
+    builddeps = pkgr.common.get_val_dist_specific("builddeps", "rpm")
     assert builddeps
     install_cmd = pkgr.data.get_install_cmd(distribution, release)
     assert install_cmd
@@ -54,7 +54,7 @@ def add_build_depdencies(distribution: str, release: str):
 
 
 def add_build_command(specname: str, cmd_options: str) -> str:
-    return f"CMD rpmbuild -ba {cmd_options} SPECS/{specname} && rpmlint RPMS/*/*.rpm"
+    return f"CMD rpmbuild -ba {cmd_options} SPECS/{specname} && rpmlint -i RPMS/*/*.rpm"
 
 
 def run_docker(label: str, pkgtype: str):

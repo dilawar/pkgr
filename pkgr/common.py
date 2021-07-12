@@ -6,7 +6,7 @@ import typing as T
 import pkgr.config
 
 
-def get_list_pkgs(key: str, pkgtype: str) -> T.List[str]:
+def get_val_dist_specific(key: str, pkgtype: str) -> T.List[str]:
     distribution = pkgr.config.get_val("distribution").split("-")
     dist, release = distribution
     vals = (

@@ -32,6 +32,8 @@ License:    {license}
 URL:        {url}
 Source0:    {source}
 
+{spec_extra}
+
 {build_requires}
 
 {requires}
@@ -67,16 +69,18 @@ def _gen_requires(reqs: T.List[str]) -> str:
 
 
 def list_build_requires() -> T.List[str]:
-    return pkgr.common.get_list_pkgs("builddeps", "rpm")
+    return pkgr.common.get_val_dist_specific("builddeps", "rpm")
 
 
 def list_requires() -> T.List[str]:
-    return pkgr.common.get_list_pkgs("deps", "rpm")
+    return pkgr.common.get_val_dist_specific("deps", "rpm")
 
 
 def generate_spec_str(options: T.Dict = {}) -> str:
     options["build_requires"] = _gen_build_requires(list_build_requires())
     options["requires"] = _gen_requires(list_requires())
+
+    options["spec_extra"] = ' '.join(pkgr.common.get_val_dist_specific("extra", "rpm"))
 
     options["configure_section"] = pkgr.config.get_val("configure.spec") or "%autosetup"
     options["build_section"] = (
