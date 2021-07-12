@@ -41,13 +41,13 @@ def rpm(
     changelog = (
         f'* {datetime.datetime.now().strftime("%a %b %d %Y")} {author} - {version}'
     )
-    changelog += collect_changelog() if logs is None else logs
+    changelog += '\n' + collect_changelog() if logs is None else logs
 
-    if changelog is None:
+    if changefile is None:
         print(changelog)
         return
 
-    logger.info("Appending changelog to {changefile}")
+    logger.info(f"Appending changelog to {changefile}")
     with Path(changefile).open("a") as f:
         f.write(changelog)
 
