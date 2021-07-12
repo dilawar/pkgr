@@ -54,7 +54,6 @@ def write_archive(archive: T.Union[Path, str], source_dir: Path):
 
     logger.info(f"Generating archive {outfile} from {source_dir}")
     files = list_src_files(source_dir)
-    logger.info(f"Adding files to archive:\n {files}")
 
     basepath = pkgr.config.get_val("name") + "-" + pkgr.config.get_val("version")
 
@@ -70,6 +69,7 @@ def write_zip(outfile: Path, files, basedir: Path):
 
     with zipfile.ZipFile(outfile, "w") as zf:
         for f in files:
+            logger.info(f'  adding to archive: {f}')
             zf.write(f, arcname=(basedir / f))
 
 
@@ -78,6 +78,7 @@ def write_tarfile(outfile: Path, files, basedir: Path):
 
     with tarfile.open(outfile, "w") as tf:
         for f in files:
+            logger.info(f'  adding to archive: {f}')
             tf.add(f, arcname=(basedir / f))
 
 

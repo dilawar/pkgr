@@ -1,4 +1,4 @@
-PKGR := poetry run pkgr
+PKGR := pkgr
 
 all : create_pkg
 

@@ -81,7 +81,7 @@ def generate_spec_str() -> str:
     options["install_section"] = (
         pkgr.config.get_val("install.rpm") or "rm -rf $SPEC_TEMPLATE\n%make_install"
     )
-    options["files_section"] = pkgr.config.get_val("files") or ""
+    options["files_section"] = pkgr.config.get_val("files.rpm") or ""
     options["changelog_section"] = pkgr.config.get_val("changelog.rpm") or ""
     return SPEC_TEMPLATE.format(**options, **pkgr.config.config())
 

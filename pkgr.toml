@@ -26,16 +26,19 @@ deb = ''
 
 [build]
 rpm = '''
-export PATH=$HOME/.local/bin:$PATH
-python3 -m pip install setuptools wheel poetry --upgrade
-python3 -m poetry build
+%py3_build
 '''
 
 [install]
-rpm='cd build && make install DESTDIR="${BP_DESTDIR}"'
+rpm='''
+%py3_install
+'''
 
 # files to install
 [files]
+rpm='''
+%{python3_sitelib}
+'''
 
 [changelog]
 rpm='file://CHANGELOG.rpm.txt'
