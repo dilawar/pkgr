@@ -60,7 +60,10 @@ def add_build_command(specname: str, cmd_options: str) -> str:
 def run_docker(label: str, pkgtype: str):
     extra = []
     if pkgtype == "rpm":
-        extra = ["--mount", f"type=bind,source={pkgr.config.work_dir()},target=/root/pkgbuild"]
+        extra = [
+            "--mount",
+            f"type=bind,source={pkgr.config.work_dir()},target=/root/rpmbuild",
+        ]
     cmd = ["docker", "run", "-t", *extra, label]
     logger.info(f"Running: {' '.join(cmd)}")
 
