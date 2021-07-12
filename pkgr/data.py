@@ -25,8 +25,7 @@ PREPARE = json.loads(
     """{
         "debian.*|ubuntu.*" : "RUN apt update",
         "opensuse.*" : "RUN zypper ref",
-        "centos-7.*" : "RUN yum install -y epel-release",
-        "centos.*|fedora.*" : "RUN dnf install -y epel-release"
+        "centos.*" : "RUN yum install -y epel-release"
         }"""
 )
 
@@ -54,7 +53,8 @@ def _get_best_match(data: T.Dict[str, T.Any], key: str) -> T.Any:
     global INSTALL_CMDS
     _keys = list(data.keys())
     _k = [x for x in _keys if re.match(x, key)]
-    assert _k, f"No match found for {key}"
+    if not _k:
+        return ""  # empty value.
     val = data[_k[0]]
     assert val
     return val

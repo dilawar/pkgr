@@ -30,7 +30,6 @@ def get_val_dist_specific(key: str, pkgtype: str) -> T.List[str]:
 def check_valid_str(val):
     assert val is not None
     if isinstance(val, str):
-        assert len(val) > 0, f"{val} is empty string"
         assert val not in ["None", "NONE"], "Cant be None"
     else:
         raise ValueError("Only strings are allowed")

@@ -1,9 +1,9 @@
 name = 'pkgr'
 version = '0.1.1'
-summary = "Package Linux pacakges"
+summary = "Create RPM/DEB pacakges using docker."
 author = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
 maintainer = "Dilawar Singh <dilawar.s.rajput@gmail.com>"
-description = 'file://README.md'
+description = "A utility to create RPM/DEB packages using docker."
 license = 'GPLv3'
 url = "https://github.com/dilawar/pkgr"
 source = "file://.#pkgr-${version}.tar.gz"
