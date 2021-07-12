@@ -1,6 +1,7 @@
 __author__           = "Dilawar Singh"
 __email__            = "dilawar.s.rajput@gmail.com"
 
+import pkgr
 from setuptools import setup
 from pathlib import Path
 
@@ -12,6 +13,7 @@ install_requires = [
     "loguru>=0.5.3,<0.6.0",
     "toml>=0.10.2,<0.11.0",
     "typer>=0.3.2,<0.4.0",
+    "docker>=5.0.0",
 ]
 
 entry_points = {"console_scripts": ["pkgr = pkgr.pkgr:main"]}
@@ -20,7 +22,7 @@ long_description = (Path(__file__).resolve().parent / 'README.md').open().read()
 
 setup_kwargs = {
     "name": "pkgr",
-    "version": "0.1.0",
+    "version": pkgr.__version__,
     "description": "Create packages for various Linuses using docker",
     "long_description": long_description,
     "author": "Dilawar Singh",

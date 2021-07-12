@@ -16,10 +16,10 @@ app = typer.Typer()
 
 
 def collect_changelog() -> str:
-    MARKER = '# Everything below is ignored\n'
-    log = click.edit('\n\n' + MARKER)
+    MARKER = "# Everything below is ignored\n"
+    log = click.edit("\n\n" + MARKER)
     if log is not None:
-        return log.split(MARKER, 1)[0].rstrip('\n')
+        return log.split(MARKER, 1)[0].rstrip("\n")
 
 
 @app.command()
@@ -38,10 +38,10 @@ def rpm(
     version = pkgr.config.get_val("version")
     assert version
 
-    changelog = (
-        f'* {datetime.datetime.now().strftime("%a %b %d %Y")} {author} - {version}'
-    )
-    changelog += '\n' + collect_changelog() if logs is None else logs
+    dist = "1"
+
+    changelog = f'* {datetime.datetime.now().strftime("%a %b %d %Y")} {author} - {version}-{dist}'
+    changelog += "\n" + collect_changelog() if logs is None else logs
 
     if changefile is None:
         print(changelog)

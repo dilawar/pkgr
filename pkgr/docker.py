@@ -61,14 +61,20 @@ def add_build_command(pkgtype: str, cmd_options) -> str:
     return f"CMD {pkg_build_cmd}"
 
 
-def run_docker(label: str, pkgtype: str):
+def run_docker(image: str, pkgtype: str):
+    """Run docker"""
     extra = []
     if pkgtype == "rpm":
         extra = [
             "--mount",
             f"type=bind,source={pkgr.config.work_dir()},target=/root/rpmbuild",
         ]
-    cmd = ["docker", "run", "-t", *extra, label]
+
+    container_name = (
+        f"pkgr-{pkgtype}-{pkgr.config.get_val('distribution')}"
+        + f"-{pkgr.config.get_val('arch')}"
+    )
+    cmd = ["docker", "run", "-l", container_name, "-t", *extra, image]
     logger.info(f"Running: {' '.join(cmd)}")
 
     popen = subprocess.Popen(

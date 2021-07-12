@@ -171,7 +171,7 @@ def build(
         toml,
         enable_debug_pkg=enable_debug_pkg,
         rpmbuild_cmd_options=rpmbuild_cmd_options,
-        overwrite=False,
+        overwrite=True,
     )
 
     dockerfile = pkgr.common.default_dockerfile()
