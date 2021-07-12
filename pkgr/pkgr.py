@@ -11,11 +11,12 @@ import typer
 
 import pkgr.rpm
 import pkgr.deb
+import pkgr.changelog
 
 app = typer.Typer()
 app.add_typer(pkgr.rpm.app, name="rpm")
 app.add_typer(pkgr.deb.app, name="deb")
-
+app.add_typer(pkgr.changelog.app, name="changelog")
 
 def main():
     app()

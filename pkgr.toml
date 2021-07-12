@@ -37,5 +37,5 @@ rpm='cd build && make install DESTDIR="${BP_DESTDIR}"'
 [files]
 
 [changelog]
-rpm='file://CHANGELOG.md'
-deb='file://CHANGELOG.md'
+rpm='file://CHANGELOG.rpm'
+deb='file://CHANGELOG.deb'
