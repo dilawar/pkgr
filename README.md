@@ -2,8 +2,8 @@
 
 Create Linux packages RPM/DEB using docker.
 
-__This is still a work in progress. Its too early to write any documentation.
-See the github action for some example use cases.__
+__This is a work in progress. There is virtually no documentation.
+See github actions for some example use cases.__
 
 ## TODO 
 
